@@ -1,7 +1,7 @@
 # Hearts with some AI LOL
 # Donny Ebel
 # MTH 205
-# Fall 2021
+# Fall 2021 - Last Modified: 02/12/22
 
 # Credits:
 # https://www.geeksforgeeks.org/print-colors-python-terminal/ for help with color printing!
@@ -12,6 +12,10 @@
 #       Changing the macro will change the order everywhere, but may mess with AI a little...
 
 # Updates:
+# 02/12/22  -Uploaded project to GitHub.
+#           -Reinstated "screen scrolling" with use of many '\n'. Forgot to do that before turning it in.
+#           -Speaking of things you forgot to do, I commented out a bunch of print statements leftover from debugging.
+#           -
 # 12/12/21  -Cleaned up choose_card() by creating ai_choose_card() method. This moves the AI logic out of choose_card().
 #           -Updated user_card in all 'choose' methods to be declared as a Card(). This prevents some confusing errors.
 #           -Commented out a section of code that's supposed to remove the ♠Q if it's unsafe, but it was kinda buggy.
@@ -316,14 +320,7 @@ class Game:
             input('[ENTER]')
             self.refresh_table()    # clear all hands, books, and stats; resets hearts_broken
 
-    def print_appropriate_hands(self, p):
-        # Prints appropriate hands during play!
-        if p.ai == HUMAN_AI:
-            p.print_hand(True)
-        elif p.ai == CPU_AI or p.ai == RANDOM_AI:
-            p.print_hand(True)
-            if self.print_wh:
-                p.print_working_hand()
+
 
     def gen_all_poss_tricks(self, turn, p, p_index, active_p_index):
         # Populates self.all_poss_tricks, a massive list of all tricks possible. Takes into account leading and
@@ -354,7 +351,7 @@ class Game:
                     self.hearts_broken = False
             return
 
-        else:  # Add a card to the trick, update trick_suit and hearts_broken, then call func with the next player
+        else:  # Add a card to the trick, update trick_suit and hearts_broken, then recall func with the next player
             for card in p.working_hand:
                 self.working_trick.append(card)  # add the appropriate card to the working trick
                 if not self.trick_suit:  # if not trick_suit, update note that it was updated
@@ -366,6 +363,7 @@ class Game:
                 self.gen_all_poss_tricks(turn, self.player_list[p_index + 1], p_index + 1, active_p_index)
 
                 # Once we've returned, remove the played card, then reset trick_suit/hearts_broken if they changed
+                # because of the car we're "reversing".
                 self.working_trick.pop()
                 if new_trick_suit:
                     self.trick_suit = None
@@ -376,7 +374,7 @@ class Game:
     def update_interface(self, game_num, turn_num):
         # Prints the interface, woo!
         print('\n\n')
-        # print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')  # for screen-scrolling; comment out if needed
+        print('\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n')  # for screen-scrolling; comment out if needed
         prCyan('Game ')
         prCyan(game_num)
         print(' | ', end='')
@@ -529,6 +527,15 @@ class Game:
         for p in self.player_list:
             self.scoreboard.update({p: self.scoreboard.get(p) + p_point_list[i]})
             i += 1
+
+    def print_appropriate_hands(self, p):
+        # Prints appropriate hands during play!
+        if p.ai == HUMAN_AI:
+            p.print_hand(True)
+        elif p.ai == CPU_AI or p.ai == RANDOM_AI:
+            p.print_hand(True)
+            if self.print_wh:
+                p.print_working_hand()
 
     def print_trick_suit(self):
         print('Trick Suit:', end=' ')
@@ -759,7 +766,7 @@ class Player:
         # For all AI, if you can only play one card, just play it!
         if len(self.working_hand) == 1 and self.ai != HUMAN_AI:
             if ai_notes:
-                prPurple('Only one card in WH')     # fixme for testing
+                # prPurple('Only one card in WH')     # fixme for testing
                 print('')
             user_card = self.working_hand[0]
 
@@ -784,7 +791,7 @@ class Player:
         # Evaluate the data; could make a func out of this with self status counts for WH; maybe later
         self.eval_safety(self.working_hand, scored_tricks)
         if print_wh:
-            self.print_status_of_cards_in(self.working_hand)  # fixme for testing; b: OUT; g: SAFE; r: UNSAFE
+            self.print_status_of_cards_in(self.working_hand)
         status_t = self.count_status_of_cards_in(self.working_hand)  # returns tuple of ints: (OUT, SAFE, UNSAFE)
         out = status_t[0]  # temp vars for readability
         safe = status_t[1]
@@ -802,13 +809,13 @@ class Player:
         #        self.remove_card(Card(SPADE, 'K', 0, UNSAFE))
         #        if self.do_i_have_the(Card(SPADE, 'A', 0, UNSAFE)) and len(self.working_hand) > 1:
         #            self.remove_card(Card(SPADE, 'A', 0))
-        #    prPurple('Removed an unsafe ♠Q, whew!')  # fixme for testing; there's a bug in here!
+        #    prPurple('Removed an unsafe ♠Q, whew!')  # fixme quarantined for testing; there's a bug in here!
             print('')
 
         # If WH is all one suit, play the highest OUT or SAFE card.
         if self.is_working_hand_all_one_suit():
             if ai_notes:
-                prPurple("All out/safe cards are of one suit")  # fixme for testing
+                # prPurple("All out/safe cards are of one suit")  # fixme for testing
                 print('')
             if turn == 1 or out >= 2:
                 user_card = self.choose_highest_safe_or_out()
@@ -823,7 +830,7 @@ class Player:
         # If it's not a simple decision, then check if we lead.
         elif p_index == 0:
             if ai_notes:
-                prPurple("Leading")  # fixme for testing
+                # prPurple("Leading")  # fixme for testing
                 print('')
 
             # Attempt a complex decision!
@@ -834,7 +841,7 @@ class Player:
         elif self.suit_count.get(trick_suit) == 0:
             if ai_notes:
                 if ai_notes:
-                    prPurple('Void in trick suit')  # fixme for testing
+                    # prPurple('Void in trick suit')  # fixme for testing
                     print('')
             # Try to play a high SPADE
             if Card(SPADE, 'Q', 13) not in cards_played:
@@ -848,7 +855,7 @@ class Player:
                     user_card = Card(SPADE, 'K', 0)
                     return user_card
                 else:
-                    prPurple('Unable to play high ♠')  # fixme for testing
+                    # prPurple('Unable to play high ♠')  # fixme for testing
                     print('')
             # Can't play a high ♠, so get suit counts to try to play out a short suit or a HEART
             i = 0
@@ -867,10 +874,10 @@ class Player:
                 return user_card
             else:
                 if ai_notes:
-                    prPurple('Unable to void a short suit of 1')  # fixme for testing
+                    # prPurple('Unable to void a short suit of 1')  # fixme for testing
                     print('')
             # Try to play a HEART
-            if suit_count_list[2]:      # fixme something wrong here and line 842??
+            if suit_count_list[2]:
                 self.remove_other_suits_except(HEART)
                 if len(self.working_hand) == 1:
                     user_card = self.working_hand[0]
@@ -880,7 +887,7 @@ class Player:
                     return user_card
             else:
                 if ai_notes:
-                    prPurple('Unable to play a heart')  # fixme for testing
+                    # prPurple('Unable to play a heart')  # fixme for testing
                     print('')
             # Void in trick_suit; can't play a high spade, short suit, or heart, so attempt a complex decision!
             user_card = self.make_a_decision(out)
@@ -938,7 +945,7 @@ class Player:
 
     def make_a_decision(self, num_outs):
         # If there are enough outs, play either safe or the out!
-        prPurple('In make_a_decision()')        # fixme for testing
+        # prPurple('In make_a_decision()')        # fixme for testing
         print('')
 
         # If I have more than 2 outs, play highest safe or out. If just one out, play it!
@@ -951,7 +958,7 @@ class Player:
 
         # If hand is all one status, choose between suit and rank
         elif self.is_working_hand_all_one_status():
-            prPurple('All one status')      # fixme for testing
+            # prPurple('All one status')      # fixme for testing
             print('')
             # self.print_working_hand()
             user_card = self.choose_highest()
